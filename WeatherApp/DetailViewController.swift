@@ -31,7 +31,6 @@ class DetailViewController: UIViewController {
     @IBOutlet weak var afterTomorrowWeatherLabel: UILabel!
     @IBOutlet weak var afterTomorrowTemperatureLabel: UILabel!
     
-    
     // 一覧画面から渡される地域ID
     var cityId:String = ""
     
@@ -42,9 +41,7 @@ class DetailViewController: UIViewController {
             self.simpleAlert(title: "エラー", message: "CityIDを参照できません")
             return
         }
-        
 
-        
         Alamofire.request("http://weather.livedoor.com/forecast/webservice/json/v1?city=\(cityId)").responseJSON{ (response: DataResponse<Any>) in
             if response.result.isFailure == true {
                 self.simpleAlert(title: "通信エラー", message: "通信に失敗しました")
@@ -63,43 +60,9 @@ class DetailViewController: UIViewController {
             // 天気の情報
             if let forecasts = json["forecasts"].array {
                 
-
-                
-                // 今日の天気
-                let todayWeather = forecasts[0]
-                
-                self.todayLabel.text = todayWeather["dateLabel"].stringValue
-                if let imgUrl = todayWeather["image"]["url"].string {
-                    self.todayImage.sd_setImage(with: URL(string: imgUrl))
-                }
-                self.todayWeatherLabel.text = todayWeather["telop"].stringValue
-                self.todayTemperatureLabel.text = self.generateTemperatureText(todayWeather["temperature"])
-                
-                
-                // 明日の天気
-                let tomorrowWeather = forecasts[1]
-                
-                self.tomorrowLabel.text = tomorrowWeather["dateLabel"].stringValue
-                if let imgUrl = tomorrowWeather["image"]["url"].string {
-                    self.tomorrowImage.sd_setImage(with: URL(string: imgUrl))
-                }
-                self.tomorrowWeatherLabel.text = tomorrowWeather["telop"].stringValue
-                self.tomorrowTemperatureLabel.text = self.generateTemperatureText(tomorrowWeather["temperature"])
-                
-                
-                // 明後日の天気
-                // 気象情報の更新が入るまで明後日の天気情報が存在しないばあいがあるので要素数をチェックします
-                if forecasts.count >= 3 {
-                    let afterTomorrowWeather = forecasts[2]
-                    
-                    self.afterTomorrowLabel.text = afterTomorrowWeather["dateLabel"].stringValue
-                    if let imgUrl = afterTomorrowWeather["image"]["url"].string {
-                        self.afterTomorrowImage.sd_setImage(with: URL(string: imgUrl))
-                    }
-                    self.afterTomorrowWeatherLabel.text = afterTomorrowWeather["telop"].stringValue
-                    self.afterTomorrowTemperatureLabel.text = self.generateTemperatureText(afterTomorrowWeather["temperature"])
-                        
-                }
+                self.insertData(dateLabel: self.todayLabel, imageView: self.todayImage, weatherLabel: self.todayWeatherLabel, tempLabel: self.todayTemperatureLabel, data: forecasts[0])
+                self.insertData(dateLabel: self.tomorrowLabel, imageView: self.tomorrowImage, weatherLabel: self.tomorrowWeatherLabel, tempLabel: self.tomorrowTemperatureLabel, data: forecasts[1])
+                self.insertData(dateLabel: self.afterTomorrowLabel, imageView: self.afterTomorrowImage, weatherLabel: self.afterTomorrowWeatherLabel, tempLabel: self.afterTomorrowTemperatureLabel, data: forecasts[2])
             }
         }
     }
@@ -131,4 +94,18 @@ class DetailViewController: UIViewController {
         
         return resultText
     }
+    
+    func insertData(dateLabel: UILabel, imageView: UIImageView, weatherLabel: UILabel, tempLabel: UILabel, data: JSON) {
+        
+        dateLabel.text = data["dateLabel"].stringValue
+        
+        if let imgUrl = data["image"]["url"].string {
+            imageView.sd_setImage(with: URL(string: imgUrl))
+        }
+        
+        weatherLabel.text = data["telop"].stringValue
+        tempLabel.text = self.generateTemperatureText(data["temperature"])
+        
+    }
+    
 }
